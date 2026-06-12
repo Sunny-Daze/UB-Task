@@ -1,4 +1,5 @@
 import express from 'express';
+import './db/postgres.db.js';
 
 const app = express();
 
