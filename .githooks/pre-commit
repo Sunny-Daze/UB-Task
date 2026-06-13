@@ -1,0 +1,7 @@
+#!/bin/sh
+PRETTIER="./server/node_modules/.bin/prettier"
+FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json|css|html)$')
+if [ -n "$FILES" ]; then
+  echo "$FILES" | xargs $PRETTIER --write --ignore-unknown
+  echo "$FILES" | xargs git add
+fi
