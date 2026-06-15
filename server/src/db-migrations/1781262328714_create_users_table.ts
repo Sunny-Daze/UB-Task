@@ -16,6 +16,16 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       notNull: true,
       unique: true,
     },
+    password: {
+      type: 'varchar(100)',
+      notNull: true,
+    },
+    role: {
+      type: 'varchar(20)',
+      notNull: true,
+      default: 'user',
+      check: "role IN ('user', 'admin')",
+    },
     successful_order_count: {
       type: 'integer',
       notNull: true,
