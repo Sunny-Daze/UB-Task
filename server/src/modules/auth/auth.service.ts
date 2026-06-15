@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { httpError } from '../../shared/httpError.js';
 import { signJwt } from '../../shared/jwt.js';
 import { userExists, findUserById, findUserByUsername, insertUser } from './auth.repository.js';
-import type { LoginInput, SignupInput } from './auth.schema.js';
+import type { LoginInput, SignupInput } from './auth.validation.js';
 import type { SafeUser } from './auth.types.js';
 
 export const signup = async (input: SignupInput): Promise<{ user: SafeUser; token: string }> => {

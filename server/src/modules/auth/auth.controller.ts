@@ -3,7 +3,7 @@ import { ZodError } from 'zod';
 import { formatZodError } from '../../shared/zod.js';
 import { httpError } from '../../shared/httpError.js';
 import { success } from '../../shared/httpSuccess.js';
-import { loginSchema, signupSchema } from './auth.schema.js';
+import { loginSchema, signupSchema } from './auth.validation.js';
 import * as authService from './auth.service.js';
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {

@@ -16,14 +16,14 @@ const seedProducts = async () => {
       'https://dummyjson.com/products?limit=0&select=title,price,description,category,thumbnail'
     );
     if (!response.ok) throw new Error(`Failed to fetch products: ${response.statusText}`);
+
     const data = await response.json();
     const products: Product[] = data.products;
 
-    await db.query('TRUNCATE TABLE products RESTART IDENTITY');
+    await db.query('TRUNCATE TABLE products CASCADE');
 
     const placeholders: string[] = [];
     const values: ProductValue[] = [];
-
     products.forEach((product, idx) => {
       const offset = idx * 5;
 
