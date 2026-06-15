@@ -58,3 +58,13 @@ export const removeFromCart = async (req: Request, res: Response, next: NextFunc
     next(err);
   }
 };
+
+export const clearCart = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const cart = await cartService.clearCart(req.user!.id);
+
+    res.status(200).json(success(cart));
+  } catch (err) {
+    next(err);
+  }
+};

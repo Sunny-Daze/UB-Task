@@ -2,6 +2,7 @@ import db from '../../db/postgres.db.js';
 import { httpError } from '../../shared/httpError.js';
 import {
   createActiveCart,
+  deleteAllCartItems,
   deleteCartItem,
   findActiveCart,
   findCartItem,
@@ -108,6 +109,15 @@ export const removeItem = async (userId: string, productId: string): Promise<Car
   if (!removed) {
     throw httpError(404, 'Item not in cart');
   }
+
+  return buildCartView(cart);
+};
+
+export const clearCart = async (userId: string): Promise<CartView> => {
+  const cart = await findActiveCart(userId);
+  if (!cart) return buildCartView(null);
+
+  await deleteAllCartItems(cart.id);
 
   return buildCartView(cart);
 };

@@ -110,6 +110,16 @@ export const deleteCartItem = async (cartId: string, productId: string): Promise
   }
 };
 
+export const deleteAllCartItems = async (cartId: string): Promise<number> => {
+  try {
+    const result = await db.query(`DELETE FROM cart_items WHERE cart_id = $1`, [cartId]);
+    return result.rowCount ?? 0;
+  } catch (err) {
+    console.error('Error in deleteAllCartItems:', { cartId, err });
+    throw err;
+  }
+};
+
 export const findCartItemsDetailed = async (cartId: string): Promise<CartItemDetailed[]> => {
   try {
     const { rows } = await db.query(
