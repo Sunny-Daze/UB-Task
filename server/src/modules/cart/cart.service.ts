@@ -1,5 +1,8 @@
 import db from '../../db/postgres.db.js';
 import { httpError } from '../../shared/httpError.js';
+import { roundTo } from '../../shared/math.js';
+import { findCouponByCodeForUser } from '../coupons/coupons.repository.js';
+import * as couponsService from '../coupons/coupons.service.js';
 import {
   createActiveCart,
   deleteAllCartItems,
@@ -10,7 +13,7 @@ import {
   updateCartItemQuantity,
   upsertCartItem,
 } from './cart.repository.js';
-import type { Cart, CartView } from './cart.types.js';
+import type { AppliedCouponView, Cart, CartView } from './cart.types.js';
 import type { AddItemInput, UpdateItemInput } from './cart.validation.js';
 
 const getOrCreateActiveCart = async (userId: string): Promise<Cart> => {
@@ -26,25 +29,88 @@ const fetchProductStock = async (productId: string): Promise<number | null> => {
   return rows[0]?.stock_quantity ?? null;
 };
 
-// fixed response for cart operations
-const buildCartView = async (cart: Cart | null): Promise<CartView> => {
+const evaluateCouponCode = async (
+  userId: string,
+  code: string,
+  subtotal: number
+): Promise<AppliedCouponView | null> => {
+  const couponRow = await findCouponByCodeForUser(code, userId);
+  const name = couponRow?.config.name ?? '';
+
+  const result = await couponsService.validateCoupon(userId, code, subtotal);
+
+  if (result.valid) {
+    return {
+      code,
+      coupon_id: result.coupon_id,
+      name,
+      valid: true,
+      discount_amount: result.discount.discount_amount,
+      final_amount: result.discount.final_amount,
+    };
+  }
+
+  return {
+    code,
+    coupon_id: couponRow?.id ?? '',
+    name,
+    valid: false,
+    reason: result.reason,
+    discount_amount: 0,
+    final_amount: roundTo(subtotal, 2),
+  };
+};
+
+const buildCartView = async (
+  cart: Cart | null,
+  userId: string,
+  code?: string
+): Promise<CartView> => {
   if (!cart) {
-    return { id: null, status: null, items: [], subtotal: 0, item_count: 0 };
+    return {
+      id: null,
+      status: null,
+      items: [],
+      subtotal: 0,
+      item_count: 0,
+      applied_coupon: null,
+      final_amount: 0,
+    };
   }
 
   const items = await findCartItemsDetailed(cart.id);
-  const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
+  const subtotal = roundTo(
+    items.reduce((sum, i) => sum + i.line_total, 0),
+    2
+  );
   const item_count = items.reduce((sum, i) => sum + i.quantity, 0);
 
-  return { id: cart.id, status: cart.status, items, subtotal, item_count };
+  const applied_coupon =
+    code && code.length > 0 ? await evaluateCouponCode(userId, code, subtotal) : null;
+  const final_amount = applied_coupon?.valid ? applied_coupon.final_amount : subtotal;
+
+  return {
+    id: cart.id,
+    status: cart.status,
+    items,
+    subtotal,
+    item_count,
+    applied_coupon,
+    final_amount,
+  };
 };
 
-export const getActiveCart = async (userId: string): Promise<CartView> => {
+export const getActiveCart = async (userId: string, code?: string): Promise<CartView> => {
   const cart = await findActiveCart(userId);
-  return buildCartView(cart);
+
+  return buildCartView(cart, userId, code);
 };
 
-export const addItem = async (userId: string, input: AddItemInput): Promise<CartView> => {
+export const addItem = async (
+  userId: string,
+  input: AddItemInput,
+  code?: string
+): Promise<CartView> => {
   const stock = await fetchProductStock(input.productId);
   if (stock === null) {
     throw httpError(404, 'Product not found');
@@ -57,20 +123,20 @@ export const addItem = async (userId: string, input: AddItemInput): Promise<Cart
     throw httpError(409, 'Out of stock');
   }
 
-  // inserts or updates
   await upsertCartItem({
     cartId: cart.id,
     productId: input.productId,
     quantity: input.quantity,
   });
 
-  return buildCartView(cart);
+  return buildCartView(cart, userId, code);
 };
 
 export const updateItem = async (
   userId: string,
   productId: string,
-  input: UpdateItemInput
+  input: UpdateItemInput,
+  code?: string
 ): Promise<CartView> => {
   const cart = await findActiveCart(userId);
   if (!cart) {
@@ -86,6 +152,7 @@ export const updateItem = async (
   if (stock === null) {
     throw httpError(404, 'Product not found');
   }
+
   if (input.quantity > stock) {
     throw httpError(409, 'Out of stock');
   }
@@ -96,10 +163,14 @@ export const updateItem = async (
     quantity: input.quantity,
   });
 
-  return buildCartView(cart);
+  return buildCartView(cart, userId, code);
 };
 
-export const removeItem = async (userId: string, productId: string): Promise<CartView> => {
+export const removeItem = async (
+  userId: string,
+  productId: string,
+  code?: string
+): Promise<CartView> => {
   const cart = await findActiveCart(userId);
   if (!cart) {
     throw httpError(404, 'Item not in cart');
@@ -110,14 +181,14 @@ export const removeItem = async (userId: string, productId: string): Promise<Car
     throw httpError(404, 'Item not in cart');
   }
 
-  return buildCartView(cart);
+  return buildCartView(cart, userId, code);
 };
 
-export const clearCart = async (userId: string): Promise<CartView> => {
+export const clearCart = async (userId: string, code?: string): Promise<CartView> => {
   const cart = await findActiveCart(userId);
-  if (!cart) return buildCartView(null);
+  if (!cart) return buildCartView(null, userId, code);
 
   await deleteAllCartItems(cart.id);
 
-  return buildCartView(cart);
+  return buildCartView(cart, userId, code);
 };

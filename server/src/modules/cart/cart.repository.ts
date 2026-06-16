@@ -1,11 +1,12 @@
 import db from '../../db/postgres.db.js';
 import type { Cart, CartItem, CartItemDetailed } from './cart.types.js';
 
+const CART_COLS = `id, user_id, status, created_at, updated_at`;
+
 export const findActiveCart = async (userId: string): Promise<Cart | null> => {
   try {
     const { rows } = await db.query(
-      `SELECT id, user_id, status, created_at, updated_at
-       FROM carts WHERE user_id = $1 AND status = 'active'`,
+      `SELECT ${CART_COLS} FROM carts WHERE user_id = $1 AND status = 'active'`,
       [userId]
     );
 
@@ -20,7 +21,7 @@ export const createActiveCart = async (userId: string): Promise<Cart> => {
   try {
     const { rows } = await db.query(
       `INSERT INTO carts (user_id, status) VALUES ($1, 'active')
-       RETURNING id, user_id, status, created_at, updated_at`,
+       RETURNING ${CART_COLS}`,
       [userId]
     );
 
@@ -113,6 +114,7 @@ export const deleteCartItem = async (cartId: string, productId: string): Promise
 export const deleteAllCartItems = async (cartId: string): Promise<number> => {
   try {
     const result = await db.query(`DELETE FROM cart_items WHERE cart_id = $1`, [cartId]);
+
     return result.rowCount ?? 0;
   } catch (err) {
     console.error('Error in deleteAllCartItems:', { cartId, err });

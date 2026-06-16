@@ -13,5 +13,9 @@ export const productIdParamSchema = z.object({
   productId: z.string().uuid(),
 });
 
+export const couponQuerySchema = z.object({
+  coupon: z.string().min(1).max(50).optional(),
+});
+
 export type AddItemInput = z.infer<typeof addItemSchema>;
 export type UpdateItemInput = z.infer<typeof updateItemSchema>;

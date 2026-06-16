@@ -1,3 +1,5 @@
+import type { ValidateCouponFailReason } from '../coupons/coupons.types.js';
+
 export type CartStatus = 'active' | 'checked_out';
 
 export interface Cart {
@@ -24,10 +26,22 @@ export interface CartItemDetailed {
   line_total: number;
 }
 
+export interface AppliedCouponView {
+  code: string;
+  coupon_id: string;
+  name: string;
+  valid: boolean;
+  reason?: ValidateCouponFailReason;
+  discount_amount: number;
+  final_amount: number;
+}
+
 export interface CartView {
   id: string | null;
   status: CartStatus | null;
   items: CartItemDetailed[];
   subtotal: number;
   item_count: number;
+  applied_coupon: AppliedCouponView | null;
+  final_amount: number;
 }
