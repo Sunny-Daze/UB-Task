@@ -3,13 +3,13 @@ import type { ColumnDefinitions, MigrationBuilder } from 'node-pg-migrate';
 export const shorthands: ColumnDefinitions | undefined = undefined;
 
 export async function up(pgm: MigrationBuilder): Promise<void> {
-  pgm.createExtension('uuid-ossp', { ifNotExists: true });
+  pgm.createExtension('pgcrypto', { ifNotExists: true });
 
   pgm.createTable('coupon_usage', {
     id: {
       type: 'uuid',
       primaryKey: true,
-      default: pgm.func('uuid_generate_v4()'),
+      default: pgm.func('gen_random_uuid()'),
     },
     coupon_id: {
       type: 'uuid',
