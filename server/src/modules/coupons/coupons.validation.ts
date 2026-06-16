@@ -28,10 +28,4 @@ export const createConfigSchema = z
     path: ['discount_value'],
   });
 
-export const validateCodeSchema = z.object({
-  code: z.string().min(1),
-  order_amount: z.number().positive(),
-});
-
 export type CreateConfigInput = z.infer<typeof createConfigSchema>;
-export type ValidateCodeInput = z.infer<typeof validateCodeSchema>;
