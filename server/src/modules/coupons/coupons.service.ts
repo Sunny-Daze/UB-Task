@@ -6,11 +6,14 @@ import {
   findActiveCouponsForUser,
   findAllIssuedCoupons,
   findCouponByCodeForUser,
+  findDiscountCodesUsage,
+  findStatsOverview,
   insertCouponConfiguration,
 } from './coupons.repository.js';
 import type {
   Coupon,
   CouponConfiguration,
+  CouponsStats,
   CouponWithConfig,
   DiscountCalculation,
   IssuedCouponView,
@@ -92,4 +95,13 @@ export const validateCoupon = async (
     coupon_id: coupon.id,
     discount: calculateDiscount(coupon.config, orderAmount),
   };
+};
+
+export const getStats = async (): Promise<CouponsStats> => {
+  const [overview, discount_codes] = await Promise.all([
+    findStatsOverview(),
+    findDiscountCodesUsage(),
+  ]);
+
+  return { overview, discount_codes };
 };

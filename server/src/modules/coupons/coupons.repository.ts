@@ -6,9 +6,13 @@ import type {
   Coupon,
   CouponConfiguration,
   CouponWithConfig,
+  DiscountCodeUsage,
   IssuedCouponView,
+  StatsOverview,
 } from './coupons.types.js';
 import type { CreateConfigInput } from './coupons.validation.js';
+
+const REVENUE_STATUSES = ['pending', 'paid', 'confirmed'];
 
 const CONFIG_COLS = `
   id, name, trigger_type, trigger_value, discount_type,
@@ -227,4 +231,56 @@ export const findAllIssuedCoupons = async (): Promise<IssuedCouponView[]> => {
     console.error('Error in findAllIssuedCoupons:', { err });
     throw err;
   }
+};
+
+export const findStatsOverview = async (): Promise<StatsOverview> => {
+  const { rows: orderRows } = await db.query(
+    `SELECT
+       COUNT(DISTINCT o.id)::int          AS total_orders,
+       COALESCE(SUM(oi.quantity), 0)::int AS items_purchased,
+       COALESCE(SUM(o.total), 0)::float   AS revenue
+     FROM orders o
+     LEFT JOIN order_items oi ON oi.order_id = o.id
+     WHERE o.status = ANY($1::text[])`,
+    [REVENUE_STATUSES]
+  );
+
+  const { rows: discountRows } = await db.query(
+    `SELECT
+       COALESCE(SUM(cu.discount_amount), 0)::float AS total_discount,
+       COUNT(*)::int                                AS coupons_used
+     FROM coupon_usage cu
+     JOIN orders o ON o.id = cu.order_id
+     WHERE o.status = ANY($1::text[])`,
+    [REVENUE_STATUSES]
+  );
+
+  return {
+    total_orders: orderRows[0].total_orders ?? 0,
+    items_purchased: orderRows[0].items_purchased ?? 0,
+    revenue: orderRows[0].revenue ?? 0,
+    total_discount: discountRows[0].total_discount ?? 0,
+    coupons_used: discountRows[0].coupons_used ?? 0,
+  };
+};
+
+export const findDiscountCodesUsage = async (): Promise<DiscountCodeUsage[]> => {
+  const { rows } = await db.query(
+    `SELECT
+       c.id                                AS coupon_id,
+       c.code                              AS code,
+       cc.name                             AS configuration_name,
+       COUNT(cu.id)::int                   AS times_used,
+       COALESCE(SUM(cu.discount_amount), 0)::float AS total_discount
+     FROM coupon_usage cu
+     JOIN coupons c              ON c.id  = cu.coupon_id
+     JOIN coupon_configurations cc ON cc.id = c.coupon_configuration_id
+     JOIN orders o               ON o.id  = cu.order_id
+     WHERE o.status = ANY($1::text[])
+     GROUP BY c.id, c.code, cc.name
+     ORDER BY total_discount DESC, times_used DESC`,
+    [REVENUE_STATUSES]
+  );
+
+  return rows as DiscountCodeUsage[];
 };

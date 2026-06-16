@@ -12,6 +12,7 @@ const appConfig = {
   DB_URL: process.env.DATABASE_URL,
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+  FE_BASE_URL: process.env.FE_BASE_URL || 'http://localhost:5173',
 };
 
 export default appConfig;

@@ -1,5 +1,26 @@
 import type { CouponDiscountType, CouponStatus, CouponTriggerType } from '../../constants/index.js';
 
+export interface StatsOverview {
+  total_orders: number;
+  items_purchased: number;
+  revenue: number;
+  total_discount: number;
+  coupons_used: number;
+}
+
+export interface DiscountCodeUsage {
+  coupon_id: string;
+  code: string;
+  configuration_name: string;
+  times_used: number;
+  total_discount: number;
+}
+
+export interface CouponsStats {
+  overview: StatsOverview;
+  discount_codes: DiscountCodeUsage[];
+}
+
 export interface CouponConfiguration {
   id: string;
   name: string;

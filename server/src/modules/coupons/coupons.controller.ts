@@ -39,3 +39,13 @@ export const listMyCoupons = async (req: Request, res: Response, next: NextFunct
     next(err);
   }
 };
+
+export const getStats = async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const stats = await couponsService.getStats();
+
+    res.status(200).json(success(stats));
+  } catch (err) {
+    next(err);
+  }
+};
