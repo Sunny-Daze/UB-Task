@@ -8,14 +8,6 @@ const navItemClass = ({ isActive }: { isActive: boolean }) =>
       : 'text-[var(--color-ink-700)] hover:bg-[var(--color-paper-2)]'
   }`;
 
-const Dot = ({ active }: { active: boolean }) => (
-  <span
-    className={`inline-block w-1.5 h-1.5 rounded-full ${
-      active ? 'bg-[var(--color-brand-500)]' : 'bg-slate-300'
-    }`}
-  />
-);
-
 const AppLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -40,16 +32,16 @@ const AppLayout = () => {
 
         <nav className="flex-1 px-3 space-y-0.5">
           <NavLink to="/products" className={navItemClass}>
-            {({ isActive }) => <>Products</>}
+            Products
           </NavLink>
           <NavLink to="/cart" className={navItemClass}>
-            {({ isActive }) => <>Cart</>}
+            Cart
           </NavLink>
           <NavLink to="/orders" className={navItemClass}>
-            {({ isActive }) => <>Orders</>}
+            Orders
           </NavLink>
           <NavLink to="/coupons" className={navItemClass}>
-            {({ isActive }) => <>Coupons</>}
+            Coupons
           </NavLink>
           {user?.role === 'admin' && (
             <>
@@ -57,10 +49,10 @@ const AppLayout = () => {
                 Admin
               </div>
               <NavLink to="/admin" end className={navItemClass}>
-                {({ isActive }) => <>Configurations</>}
+                Configurations
               </NavLink>
               <NavLink to="/admin/stats" className={navItemClass}>
-                {({ isActive }) => <>Stats</>}
+                Stats
               </NavLink>
             </>
           )}
