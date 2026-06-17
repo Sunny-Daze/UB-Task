@@ -11,3 +11,7 @@ Backend:
 
 - Server is ready to test
 
+Frontend:
+
+- Rename .example.env to .env
+- Add the api url (I have already added a deployed backend url if you want to use that)
