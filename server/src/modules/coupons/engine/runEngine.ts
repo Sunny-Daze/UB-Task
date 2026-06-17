@@ -6,15 +6,20 @@ import { EVALUATOR_REGISTRY } from './registry.js';
 
 export const runCouponEngine = async (ctx: TriggerContext): Promise<Coupon[]> => {
   const configs = await findActiveTriggerableConfigurations();
-  const issued: Coupon[] = [];
 
-  for (const config of configs) {
+  // find the matched configs for given trigger type
+  const matching = configs.filter((config) => {
     const evaluator = EVALUATOR_REGISTRY.get(config.trigger_type);
-    if (!evaluator) continue;
-    if (evaluator.shouldIssue(config, ctx)) {
-      issued.push(await issueCouponForConfig(config, ctx.userId));
-    }
-  }
+    return evaluator?.shouldIssue(config, ctx) ?? false;
+  });
 
-  return issued;
+  if (matching.length === 0) return [];
+
+  // pick the config with best discount
+  const best = matching.reduce((a, b) => {
+    if (b.discount_value !== a.discount_value) return b.discount_value > a.discount_value ? b : a;
+    return new Date(b.created_at).getTime() > new Date(a.created_at).getTime() ? b : a;
+  });
+
+  return [await issueCouponForConfig(best, ctx.userId)];
 };
