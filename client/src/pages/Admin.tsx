@@ -107,8 +107,6 @@ const Admin = () => {
               onChange={(e) => setField('trigger_type', e.target.value)}
             >
               <option value="nth_order">Every Nth order</option>
-              <option value="first_time">First order</option>
-              <option value="manual">Manual</option>
             </select>
           </div>
 

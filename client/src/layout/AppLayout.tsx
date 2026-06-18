@@ -24,8 +24,8 @@ const AppLayout = () => {
       <aside className="w-64 bg-white border-r border-slate-200/70 flex flex-col">
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center gap-2">
-            <div className="font-display text-lg tracking-tight text-[var(--color-ink-900)]">
-              uniblox store
+            <div className="font-display text-lg tracking-tight text-[var(--color-ink-900)] font-bold">
+              Store
             </div>
           </div>
         </div>
@@ -49,7 +49,7 @@ const AppLayout = () => {
                 Admin
               </div>
               <NavLink to="/admin" end className={navItemClass}>
-                Configurations
+                Coupons Management
               </NavLink>
               <NavLink to="/admin/stats" className={navItemClass}>
                 Stats
